@@ -302,7 +302,7 @@ class Command {
 	 * @returns {Promise<?Message|?Array<Message>>}
 	 */
 	onBlock(message, reason, data) {
-		let Embed = MessageEmbed()
+		let Embed = new MessageEmbed()
 		Embed.setTitle("An error occurred.")
 		Embed.setColor("0xFF0000")
 
@@ -348,7 +348,7 @@ class Command {
 	 * @returns {Promise<?Message|?Array<Message>>}
 	 */
 	onError(err, message, args, fromPattern, result) { // eslint-disable-line no-unused-vars
-		let Embed = MessageEmbed()
+		let Embed = new MessageEmbed()
 		Embed.setTitle("An error occurred.")
 		Embed.setColor("0xFF0000")
 		const owners = this.client.owners;
