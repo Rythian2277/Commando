@@ -1,5 +1,5 @@
 const path = require('path');
-const { escapeMarkdown } = require('discord.js');
+const { escapeMarkdown, MessageEmbed } = require('discord.js');
 const { oneLine, stripIndents } = require('common-tags');
 const ArgumentCollector = require('./collector');
 const { permissions } = require('../util');
@@ -302,34 +302,39 @@ class Command {
 	 * @returns {Promise<?Message|?Array<Message>>}
 	 */
 	onBlock(message, reason, data) {
+		let Embed = MessageEmbed()
+		Embed.setTitle("An error occurred.")
+		Embed.setColor("0xFF0000")
+
 		switch(reason) {
 			case 'guildOnly':
-				return message.reply(`The \`${this.name}\` command must be used in a server channel.`);
+				Embed.setDescription(`The \`${this.name}\` command must be used in a server channel.`);
 			case 'nsfw':
-				return message.reply(`The \`${this.name}\` command can only be used in NSFW channels.`);
+				Embed.setDescription(`The \`${this.name}\` command can only be used in NSFW channels.`);
 			case 'permission': {
-				if(data.response) return message.reply(data.response);
-				return message.reply(`You do not have permission to use the \`${this.name}\` command.`);
+				if(data.response) Embed.setDescription(data.response);
+				Embed.setDescription(`You do not have permission to use the \`${this.name}\` command.`);
 			}
 			case 'clientPermissions': {
 				if(data.missing.length === 1) {
-					return message.reply(
+					Embed.setDescription(
 						`I need the "${permissions[data.missing[0]]}" permission for the \`${this.name}\` command to work.`
 					);
 				}
-				return message.reply(oneLine`
+				Embed.setDescription(oneLine`
 					I need the following permissions for the \`${this.name}\` command to work:
 					${data.missing.map(perm => permissions[perm]).join(', ')}
 				`);
 			}
 			case 'throttling': {
-				return message.reply(
+				Embed.setDescription(
 					`You may not use the \`${this.name}\` command again for another ${data.remaining.toFixed(1)} seconds.`
 				);
 			}
 			default:
-				return null;
+				Embed.setDescription(data.response);
 		}
+		return message.reply({embed: Embed})
 	}
 
 	/**
@@ -343,6 +348,9 @@ class Command {
 	 * @returns {Promise<?Message|?Array<Message>>}
 	 */
 	onError(err, message, args, fromPattern, result) { // eslint-disable-line no-unused-vars
+		let Embed = MessageEmbed()
+		Embed.setTitle("An error occurred.")
+		Embed.setColor("0xFF0000")
 		const owners = this.client.owners;
 		const ownerList = owners ? owners.map((usr, i) => {
 			const or = i === owners.length - 1 && owners.length > 1 ? 'or ' : '';
@@ -350,11 +358,12 @@ class Command {
 		}).join(owners.length > 2 ? ', ' : ' ') : '';
 
 		const invite = this.client.options.invite;
-		return message.reply(stripIndents`
+		Embed.setDescription(stripIndents`
 			An error occurred while running the command: \`${err.name}: ${err.message}\`
 			You shouldn't ever receive an error like this.
 			Please contact ${ownerList || 'the bot owner'}${invite ? ` in this server: ${invite}` : '.'}
 		`);
+		return message.reply({embed: Embed})
 	}
 
 	/**
